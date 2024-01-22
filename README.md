@@ -38,10 +38,11 @@ HAVING
 1. `Выполнил explain analyze для запроса из задания. Время выполнения запроса - 11 сек.`
 2. `Узкими местами считаю использование оконной функции, для которой используется столбец film.title, а также несколько проверок в операторе WHERE.`
 3. `Оптимизаровал запрос заменив проверки в WHERE операторами JOIN и убрав оконную функцию. Время выполнения снизилось до 0.031 сек`
-4. `Добавление индексов не считаю необходимым, т.к. таблицы уже содержат индексы PRIMARY KEY`
+4. `Таблицы в запросе уже содержат индексы PRIMARY KEY.`
+5. `Добавил индекс в таблице payment на столбец payment_date. Изменил условие филтрации по дате в операторе WHERE.`
 
 ```
-sql-запрос для выполнения задания 2
+sql-запросы для выполнения задания 2
 
 explain analyze 
 select
@@ -60,11 +61,34 @@ where
 group by
 	customer_names;
 
+
+CREATE INDEX idx_payment_date ON payment (payment_date);
+
+
+explain analyze 
+select
+	distinct concat(c.last_name, ' ', c.first_name) customer_names,
+	sum(p.amount) amount_sum 
+from
+	payment p
+join rental r ON
+	p.payment_date = r.rental_date
+join customer c ON
+	r.customer_id = c.customer_id
+join inventory i ON
+	i.inventory_id = r.inventory_id
+where
+	date(p.payment_date) >= '2005-07-30'
+	and date(p.payment_date) < '2005-07-31'
+group by
+	customer_names;
+
 ```
 
 `Скриншоты выполнения задания 2`
 ![Выполнение первоначального запроса](img/task2_1.png)
 ![Выполнение оптимизированного запроса](img/task2_2.png)
+![Выполнение запроса после добавления индекса](img/task2_3.png)
 
 
 ---
